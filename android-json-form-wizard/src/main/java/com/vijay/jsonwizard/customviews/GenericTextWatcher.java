@@ -1,6 +1,7 @@
 package com.vijay.jsonwizard.customviews;
 
 import android.app.Activity;
+import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -23,6 +24,7 @@ public class GenericTextWatcher implements TextWatcher, View.OnFocusChangeListen
     private String mStepName;
     private ArrayList<View.OnFocusChangeListener> onFocusChangeListeners;
     private JsonFormFragment formFragment;
+    private Editable currentEditable;
 
     public GenericTextWatcher(String stepName, JsonFormFragment formFragment, View view) {
         this.formFragment = formFragment;
@@ -30,7 +32,9 @@ public class GenericTextWatcher implements TextWatcher, View.OnFocusChangeListen
         mStepName = stepName;
         onFocusChangeListeners = new ArrayList<>();
         mView.setOnFocusChangeListener(this);
+        currentEditable = ((AppCompatEditText) mView).getText();
     }
+
 
     public void addOnFocusChangeListener(View.OnFocusChangeListener onFocusChangeListener) {
         onFocusChangeListeners.add(onFocusChangeListener);
@@ -47,19 +51,27 @@ public class GenericTextWatcher implements TextWatcher, View.OnFocusChangeListen
     }
 
     @Override
-    public synchronized void afterTextChanged(Editable editable) {
+    public void afterTextChanged(Editable editable) {
 
         if (editable != null && isRedundantRepetition(editable.toString())) {
             return;
         }
+        this.currentEditable = editable;
 
+    }
+
+    private synchronized void performWriteValue(Editable editable) {
+        if (editable != null && isRedundantRepetition(editable.toString())) {
+            return;
+        }
         String text = (String) mView.getTag(R.id.raw_value);
 
         if (text == null) {
-            text = editable.toString();
+            if (editable != null) {
+                text = editable.toString();
+                mView.setTag(R.id.previous, editable.toString());
+            }
         }
-
-        mView.setTag(R.id.previous, editable.toString());
 
         JsonApi api;
         if (formFragment.getContext() instanceof JsonApi) {
@@ -79,13 +91,13 @@ public class GenericTextWatcher implements TextWatcher, View.OnFocusChangeListen
             Log.e(TAG, e.getMessage(), e);
         }
 
-
     }
 
     @Override
     public void onFocusChange(View v, boolean hasFocus) {
         if (!hasFocus) {
             JsonFormFragmentPresenter.validate(formFragment, mView, false);
+            performWriteValue(currentEditable);
         }
         for (View.OnFocusChangeListener curListener : onFocusChangeListeners) {
             curListener.onFocusChange(v, hasFocus);
@@ -101,5 +113,10 @@ public class GenericTextWatcher implements TextWatcher, View.OnFocusChangeListen
         return ((currentFocus == null || !currentFocus.equals(mView)) && (prev != null && prev.equals(text)));
 
 
+    }
+
+
+    public void performAction() {
+        Log.i("ActionTimer", "am performing an action now");
     }
 }
