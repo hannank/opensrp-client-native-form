@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -86,7 +85,7 @@ import java.util.regex.Pattern;
 
 import static android.view.inputmethod.InputMethodManager.HIDE_NOT_ALWAYS;
 
-public class JsonFormActivity extends AppCompatActivity implements JsonApi {
+public class JsonFormActivity extends JsonFormBaseActivity implements JsonApi {
 
     private static final String TAG = JsonFormActivity.class.getSimpleName();
     private static final String JSON_STATE = "jsonState";
@@ -118,6 +117,7 @@ public class JsonFormActivity extends AppCompatActivity implements JsonApi {
     private RulesEngineFactory rulesEngineFactory = null;
     private LocalBroadcastManager localBroadcastManager;
     private Map<String, String> formValuesCacheMap = new HashMap<>();
+
     private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1790,10 +1790,15 @@ public class JsonFormActivity extends AppCompatActivity implements JsonApi {
                     view.setFocusable(true);
                 }
             } else {
+
                 clearHiddenViewsValues(object, addressString);
                 curCanvasView.setEnabled(false);
                 curCanvasView.setVisibility(View.GONE);
                 refreshViews(curCanvasView);
+            }
+
+            if (object != null) {
+                object.put(JsonFormConstants.IS_VISIBLE, visible);
             }
         }
     }
